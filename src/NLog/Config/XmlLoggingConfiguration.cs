@@ -576,7 +576,7 @@ namespace NLog.Config
             }
 
             //check loglevel as first, as other properties could write (indirect) to the internal log.
-            InternalLogger.LogLevel = LogLevel.FromString(nlogElement.GetOptionalAttribute("internalLogLevel", InternalLogger.LogLevel.Name));
+            InternalLogger.LogLevel = LogLevelFromString(nlogElement.GetOptionalAttribute("internalLogLevel", InternalLogger.LogLevel.Name));
 
 #pragma warning disable 618
             ExceptionLoggingOldStyle = nlogElement.GetOptionalBooleanAttribute("exceptionLoggingOldStyle", false);
@@ -600,7 +600,7 @@ namespace NLog.Config
             InternalLogger.LogToTrace = nlogElement.GetOptionalBooleanAttribute("internalLogToTrace", InternalLogger.LogToTrace);
 #endif
             InternalLogger.IncludeTimestamp = nlogElement.GetOptionalBooleanAttribute("internalLogIncludeTimestamp", InternalLogger.IncludeTimestamp);
-            _logFactory.GlobalThreshold = LogLevel.FromString(nlogElement.GetOptionalAttribute("globalThreshold", _logFactory.GlobalThreshold.Name));
+            _logFactory.GlobalThreshold = LogLevelFromString(nlogElement.GetOptionalAttribute("globalThreshold", _logFactory.GlobalThreshold.Name));
 
             var children = nlogElement.Children.ToList();
 
@@ -754,11 +754,16 @@ namespace NLog.Config
             }
         }
 
-        private static void ParseLevels(NLogXmlElement loggerElement, LoggingRule rule)
+        private LogLevel LogLevelFromString(string text)
+        {
+            return LogLevel.FromString(ExpandSimpleVariables(text));
+        }
+
+        private void ParseLevels(NLogXmlElement loggerElement, LoggingRule rule)
         {
             if (loggerElement.AttributeValues.TryGetValue("level", out var levelString))
             {
-                LogLevel level = LogLevel.FromString(levelString);
+                LogLevel level = LogLevelFromString(levelString);
                 rule.EnableLoggingForLevel(level);
             }
             else if (loggerElement.AttributeValues.TryGetValue("levels", out levelString))
@@ -770,7 +775,7 @@ namespace NLog.Config
                 {
                     if (!string.IsNullOrEmpty(token))
                     {
-                        LogLevel level = LogLevel.FromString(token);
+                        LogLevel level = LogLevelFromString(token);
                         rule.EnableLoggingForLevel(level);
                     }
                 }
@@ -782,12 +787,12 @@ namespace NLog.Config
 
                 if (loggerElement.AttributeValues.TryGetValue("minLevel", out var minLevelString))
                 {
-                    minLevel = LogLevel.FromString(minLevelString).Ordinal;
+                    minLevel = LogLevelFromString(minLevelString).Ordinal;
                 }
 
                 if (loggerElement.AttributeValues.TryGetValue("maxLevel", out var maxLevelString))
                 {
-                    maxLevel = LogLevel.FromString(maxLevelString).Ordinal;
+                    maxLevel = LogLevelFromString(maxLevelString).Ordinal;
                 }
 
                 for (int i = minLevel; i <= maxLevel; ++i)
